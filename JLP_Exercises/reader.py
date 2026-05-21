@@ -1,43 +1,44 @@
 import csv
-from typing import List, TextIO
 
-def read_csv_as_dicts(filename:str, types:List[type]) -> List[dict]:
+def read_csv_as_dicts(filename, types, *, headers = None):
     '''
     Read CSV data into a list of dictionaries with optional type conversion
     '''
     with open(filename) as file:
-        return csv_as_dicts(file, types)
+        return csv_as_dicts(file, types, headers = headers)
 
-def read_csv_as_instances(filename:str, cls:type) -> List:
+def read_csv_as_instances(filename, cls, *, headers = None):
     '''
     Read CSV data into a list of instances
     '''
     with open(filename) as file:
-        return csv_as_instances(file, cls)
+        return csv_as_instances(file, cls, headers = headers)
 
-def csv_as_dicts(file:TextIO, types:List[type], headers:str = None) -> List[dict]:
+def csv_as_dicts(lines, types, *, headers = None):
     '''
-    Read CSV data into a list of dictionaries with optional type conversion
+    Convert CSV data into a list of dictionaries with optional type conversion
     '''
-    records = []
-    rows = csv.reader(file)
+    return convert_csv(lines, 
+                       lambda headers, row: {name: func(val) for name, func, val 
+                                             in zip(headers, types, row)}, 
+                       headers = headers)
+
+def csv_as_instances(lines, cls, *, headers = None):
+    '''
+    Convert CSV data into a list of instances
+    '''
+    return convert_csv(lines, 
+                       lambda headers, row: cls.from_row(row), 
+                       headers = headers)
+
+def convert_csv(lines, converter, *, headers = None):
+    '''
+    Convert CSV data into some user defined format
+    '''
+    rows = csv.reader(lines)
     if not headers:
         headers = next(rows)
-    for row in rows:
-        record = { name: func(val) 
-                    for name, func, val in zip(headers, types, row) }
-        records.append(record)
-    return records
+    return list(map(lambda row: converter(headers, row), rows))
 
-def csv_as_instances(file:TextIO, cls:type, headers:str = None) -> List:
-    '''
-    Read CSV data into a list of instances
-    '''
-    records = []
-    rows = csv.reader(file)
-    if not headers:
-        headers = next(rows)
-    for row in rows:
-        record = cls.from_row(row)
-        records.append(record)
-    return records
+def make_dict(headers, row):
+    return dict(zip(headers, row))
