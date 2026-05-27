@@ -1,4 +1,6 @@
 import csv
+import logging
+log = logging.getLogger(__name__)
 
 def read_csv_as_dicts(filename, types, *, headers = None):
     '''
@@ -36,9 +38,17 @@ def convert_csv(lines, converter, *, headers = None):
     Convert CSV data into some user defined format
     '''
     rows = csv.reader(lines)
+    results = []
     if not headers:
         headers = next(rows)
-    return list(map(lambda row: converter(headers, row), rows))
+    for index, row in enumerate(rows):
+        try:
+            result = converter(headers, row)
+            results.append(result)
+        except ValueError as e:
+            log.warning(f'Row {index+1}: bad row {row}')
+            log.debug(f'Reason: {e}')
+    return results
 
 def make_dict(headers, row):
     return dict(zip(headers, row))
