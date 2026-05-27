@@ -1,9 +1,5 @@
-def typedproperty(expected_type):
-    private_name = ''
-
-    def __set_name__(self, cls, name):
-        nonlocal private_name
-        private_name = '_' + name
+def typed_property(name, expected_type):
+    private_name = '_' + name
 
     @property
     def value(self):
@@ -17,9 +13,32 @@ def typedproperty(expected_type):
 
     return value
 
-String = lambda :typedproperty(str)
-Integer = lambda :typedproperty(int)
-Float = lambda :typedproperty(float)
+class String():
+    def __init__(self, name = None):
+        self.name = name
+    def __get__(self, instance, owner):
+        name = instance.__dict__[self.name]
+        return lambda name:typed_property(name, str)
+    def __set_name__(self, cls, name):
+        self.name =  name
+
+class Integer():
+    def __init__(self, name = None):
+        self.name = name
+    def __get__(self, instance, owner):
+        name = instance.__dict__[self.name]
+        return lambda name:typed_property(name, int)
+    def __set_name__(self, cls, name):
+        self.name =  name
+
+class Float():
+    def __init__(self, name = None):
+        self.name = name
+    def __get__(self, instance, owner):
+        name = instance.__dict__[self.name]
+        return lambda name:typed_property(name, float)
+    def __set_name__(self, cls, name):
+        self.name =  name
 
 class Stock:
     name = String()
