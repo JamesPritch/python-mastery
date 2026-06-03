@@ -1,3 +1,5 @@
+import inspect
+
 class Validator:
     def __init__(self, name=None):
         self.name = name
@@ -83,7 +85,10 @@ class ValidatedFunction:
     def __init__(self, func):
         self.func = func
     def __call__(self, *args, **kwargs):
-        
-        print('Calling', self.func)
+        sig = inspect.signature(self.func)
+        annotations = self.func.__annotations__
+        bound = sig.bind(*args, **kwargs)
+        for name, val in bound.arguments.items():
+            annotations[name].check(val)
         result = self.func(*args, **kwargs)
         return result
