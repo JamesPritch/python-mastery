@@ -52,6 +52,44 @@ class PositiveFloat(Float, Positive):
 class NonEmptyString(String, NonEmpty):
     pass
 
+def isvalidator(item):
+    return isinstance(item, type) and issubclass(item, Validator)
+
+def validated(func):
+    sig = inspect.signature(func)
+
+    # Get the function annotations
+    annotations = { name:val for name, val in func.__annotations__.items()
+                    if isvalidator(val) }
+
+    # Get the return annotation (if any)
+    retcheck = annotations.pop('return', None)
+
+    def wrapper(*args, **kwargs):
+        bound = sig.bind(*args, **kwargs)
+        errors = []
+
+        # Enforce argument checks
+        for name, validator in annotations.items():
+            try:
+                validator.check(bound.arguments[name])
+            except Exception as e:
+                errors.append(f'  {name}: {e}')
+
+        if errors:
+            raise TypeError('Bad Arguments\n' + '\n'.join(errors))
+
+        result = func(*args, **kwargs)
+
+        # Enforce return check (if any)
+        if retcheck:
+            try:
+                retcheck.check(result)
+            except Exception as e:
+                raise TypeError(f'Bad return: {e}') from None
+        return result
+    return wrapper
+
 class Stock:
     name   = NonEmptyString()
     shares = PositiveInteger()
@@ -69,7 +107,8 @@ class Stock:
         return isinstance(value, Stock) and ((self.name, self.shares, self.price) ==
                                              (value.name, value.shares, value.price))
     
-    def sell(self, nshares):
+    @validated
+    def sell(self, nshares:PositiveInteger):
         self.shares -= nshares
 
     @classmethod
@@ -80,15 +119,3 @@ class Stock:
     @property
     def cost(self):
         return self.shares * self.price
-
-class ValidatedFunction:
-    def __init__(self, func):
-        self.func = func
-    def __call__(self, *args, **kwargs):
-        sig = inspect.signature(self.func)
-        annotations = self.func.__annotations__
-        bound = sig.bind(*args, **kwargs)
-        for name, val in bound.arguments.items():
-            annotations[name].check(val)
-        result = self.func(*args, **kwargs)
-        return result
