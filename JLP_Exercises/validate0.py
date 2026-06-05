@@ -1,4 +1,5 @@
 import inspect
+from functools import wraps
 
 class Validator:
     def __init__(self, name=None):
@@ -65,6 +66,8 @@ def validated(func):
     # Get the return annotation (if any)
     retcheck = annotations.pop('return', None)
 
+    @wraps(func)
+
     def wrapper(*args, **kwargs):
         bound = sig.bind(*args, **kwargs)
         errors = []
@@ -89,6 +92,38 @@ def validated(func):
                 raise TypeError(f'Bad return: {e}') from None
         return result
     return wrapper
+
+def enforce(**annotations):
+    retcheck = annotations.pop('return_', None)
+
+    def decorate(func):
+        sig = inspect.signature(func)
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            bound = sig.bind(*args, **kwargs)
+            errors = []
+
+            # Enforce argument checks
+            for name, validator in annotations.items():
+                try:
+                    validator.check(bound.arguments[name])
+                except Exception as e:
+                    errors.append(f'    {name}: {e}')
+
+            if errors:
+                raise TypeError('Bad Arguments\n' + '\n'.join(errors))
+
+            result = func(*args, **kwargs)
+
+            if retcheck:
+                try:
+                    retcheck.check(result)
+                except Exception as e:
+                    raise TypeError(f'Bad return: {e}') from None
+            return result
+        return wrapper
+    return decorate
 
 class Stock:
     name   = NonEmptyString()

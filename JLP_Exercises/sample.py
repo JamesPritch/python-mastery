@@ -1,9 +1,14 @@
 from validate0 import Integer, validated
+from logcall import logformat, logged
 
-@validated
+@logged
 def add(x: Integer, y: Integer) -> Integer:
     return x + y
 
-@validated
+@logged
 def pow(x: Integer, y: Integer) -> Integer:
     return x ** y
+
+@logformat('{func.__code__.co_filename}:{func.__name__}')
+def mul(x: Integer, y: Integer) -> Integer:
+    return x * y
