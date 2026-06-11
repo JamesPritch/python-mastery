@@ -1,7 +1,10 @@
 import sys
 import inspect
+from validate0 import Validator, validated
 
 class Structure:
+    _types = ()
+
     def __repr__(self):
         return '%s(%s)' % (type(self).__name__,
                            ', '.join(repr(getattr(self, name)) for name in self._fields))
@@ -21,3 +24,25 @@ class Structure:
         locs = {}
         exec(code, locs)
         cls.__init__ = locs['__init__']
+    @classmethod
+    def __init_subclass__(cls):
+        validate_attributes(cls)
+    @classmethod
+    def from_row(cls, row):
+        rowdata = [func(val) for func, val in zip(cls._types, row)]
+        return cls(*rowdata)
+
+def validate_attributes(cls):
+    validators = []
+    for name, val in vars(cls).items():
+        if isinstance(val, Validator):
+            validators.append(val)
+        elif callable(val) and val.__annotations__:
+            setattr(cls, name, validated(val))
+    
+    cls._fields = tuple([val.name for val in validators])
+    
+    cls._types = tuple([getattr(val, 'expected_type') for val in validators])
+
+    cls.create_init()
+    return cls
