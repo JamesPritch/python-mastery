@@ -1,5 +1,4 @@
 import sys
-import inspect
 from validate0 import Validator, validated
 
 class Structure:
@@ -45,4 +44,8 @@ def validate_attributes(cls):
     cls._types = tuple([getattr(val, 'expected_type') for val in validators])
 
     cls.create_init()
+    return cls
+
+def typed_structure(clsname, **validators):
+    cls = type(clsname, (Structure,), validators)
     return cls
