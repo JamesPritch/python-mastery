@@ -1,7 +1,18 @@
 import sys
 from validate0 import Validator, validated
+from collections import ChainMap
 
-class Structure:
+class StructureMeta(type):
+    @classmethod
+    def __prepare__(meta, clsname, bases):
+        return ChainMap({}, Validator.validators)
+    
+    @staticmethod
+    def __new__(meta, name, bases, methods):
+        methods = methods.maps[0]
+        return super().__new__(meta, name, bases, methods)
+
+class Structure(metaclass = StructureMeta):
     _types = ()
 
     def __repr__(self):

@@ -13,6 +13,12 @@ class Validator:
     @classmethod
     def check(cls, value):
         return value
+
+    # Collect derived classes into a dict
+    validators = {}
+    @classmethod
+    def __init_subclass__(cls):
+        cls.validators[cls.__name__] = cls
     
 class Typed(Validator):
     expected_type = object
