@@ -22,6 +22,11 @@ class Structure(metaclass = StructureMeta):
         if name not in self._fields and name[0] != '_':
             raise AttributeError(f'No attribute {name}')
         super().__setattr__(name, value)
+    def __iter__(self):
+        for name in self._fields:
+            yield getattr(self, name)
+    def __eq__(self, value):
+        return isinstance(value, type(self)) and tuple(self) == tuple(value)
 
     @classmethod
     def create_init(cls):
