@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from colorama import Fore
 
 # Classes
 class TableFormatter(ABC):
@@ -15,7 +16,16 @@ class TextTableFormatter(TableFormatter):
         print(' '.join('%10s' % h for h in headers))
         print(('-'*10 + ' ')*len(headers))
     def row(self, rowdata):
-        print(' '.join('%10s' % d for d in rowdata))
+        # Added colours for ticker pipeline
+        if rowdata[2] > 0:
+            print(Fore.GREEN + ' '.join('%10s' % d for d in rowdata))
+        elif rowdata[2] < 0:
+            print(Fore.RED + ' '.join('%10s' % d for d in rowdata))
+        else:
+            print(Fore.WHITE + ' '.join('%10s' % d for d in rowdata))
+        print(Fore.WHITE + '', end = '')
+        # Previous code
+        # print(' '.join('%10s' % d for d in rowdata))
 
 class CSVTableFormatter(TableFormatter):
     def headings(self, headers):
