@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from colorama import Fore
+__all__ = ['create_formatter', 'print_table']
 
 # Classes
 class TableFormatter(ABC):
@@ -9,35 +9,6 @@ class TableFormatter(ABC):
     @abstractmethod
     def row(self, rowdata):
         pass
-
-class TextTableFormatter(TableFormatter):
-    def headings(self, headers):
-        print(('-'*10 + ' ')*len(headers))
-        print(' '.join('%10s' % h for h in headers))
-        print(('-'*10 + ' ')*len(headers))
-    def row(self, rowdata):
-        # Added colours for ticker pipeline
-        if rowdata[2] > 0:
-            print(Fore.GREEN + ' '.join('%10s' % d for d in rowdata))
-        elif rowdata[2] < 0:
-            print(Fore.RED + ' '.join('%10s' % d for d in rowdata))
-        else:
-            print(Fore.WHITE + ' '.join('%10s' % d for d in rowdata))
-        print(Fore.WHITE + '', end = '')
-        # Previous code
-        # print(' '.join('%10s' % d for d in rowdata))
-
-class CSVTableFormatter(TableFormatter):
-    def headings(self, headers):
-        print(','.join(str(h) for h in headers))
-    def row(self, rowdata):
-        print(','.join(str(d) for d in rowdata))
-
-class HTMLTableFormatter(TableFormatter):
-    def headings(self, headers):
-        print('<tr> <th>' + '</th> <th>'.join(str(h) for h in headers) + '</th> </tr>')
-    def row(self, rowdata):
-        print('<tr> <td>' + '</td> <td>'.join(str(d) for d in rowdata) + '</td> </tr>')
 
 class ColumnFormatMixin:
     formats = []
@@ -49,6 +20,9 @@ class UpperHeadersMixin:
     def headings(self, headers):
         super().headings([h.upper() for h in headers])
 
+from .formats.csv import CSVTableFormatter
+from .formats.html import HTMLTableFormatter
+from .formats.text import TextTableFormatter
 
 # Functions
 def print_table(data, fields, formatter):

@@ -1,6 +1,7 @@
 import sys
 from structly.validate0 import Validator, validated
 from collections import ChainMap
+__all__ = ['Structure']
 
 class StructureMeta(type):
     @classmethod
