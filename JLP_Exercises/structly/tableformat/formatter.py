@@ -3,6 +3,13 @@ __all__ = ['create_formatter', 'print_table']
 
 # Classes
 class TableFormatter(ABC):
+    _formats = {}
+
+    @classmethod
+    def __init_subclass__(cls):
+        name = cls.__module__.split('.')[-1]
+        TableFormatter._formats[name] = cls
+
     @abstractmethod
     def headings(self, headers):
         pass
@@ -19,10 +26,6 @@ class ColumnFormatMixin:
 class UpperHeadersMixin:
     def headings(self, headers):
         super().headings([h.upper() for h in headers])
-
-from .formats.csv import CSVTableFormatter
-from .formats.html import HTMLTableFormatter
-from .formats.text import TextTableFormatter
 
 # Functions
 def print_table(data, fields, formatter):
@@ -45,38 +48,15 @@ def create_formatter(type, column_formats = False, upper_headers = False):
     elif column_formats and upper_headers:
         raise ValueError('Expect one kwarg, got two.')
     # Processing
-    elif type == 'html':
-        if column_formats:
-            class PortfolioFormatter(ColumnFormatMixin, HTMLTableFormatter):
-                formats = column_formats
-            return PortfolioFormatter()
-        elif upper_headers:
-            class PortfolioFormatter(UpperHeadersMixin, HTMLTableFormatter):
-                pass
-            return PortfolioFormatter()
-        else:
-            return HTMLTableFormatter()
-    elif type == 'csv':
-        if column_formats:
-            class PortfolioFormatter(ColumnFormatMixin, CSVTableFormatter):
-                formats = column_formats
-            return PortfolioFormatter()
-        elif upper_headers:
-            class PortfolioFormatter(UpperHeadersMixin, CSVTableFormatter):
-                pass
-            return PortfolioFormatter()
-        else:
-            return CSVTableFormatter()
-    elif type == 'text':
-        if column_formats:
-            class PortfolioFormatter(ColumnFormatMixin, TextTableFormatter):
-                formats = column_formats
-            return PortfolioFormatter()
-        elif upper_headers:
-            class PortfolioFormatter(UpperHeadersMixin, TextTableFormatter):
-                pass
-            return PortfolioFormatter()
-        else:
-            return TextTableFormatter()
-    else:
-        raise ValueError('Expected \'csv\', \'html\', or \'text\'.')
+    if type not in TableFormatter._formats:
+        __import__(f'{__package__}.formats.{type}')
+    formatter_cls = TableFormatter._formats.get(type)
+    if not formatter_cls:
+        raise RuntimeError('Unknown format %s' % type)
+    if column_formats:
+        class formatter_cls(ColumnFormatMixin, formatter_cls):
+            formats = column_formats
+    if upper_headers:
+        class formatter_cls(UpperHeadersMixin, formatter_cls):
+            pass
+    return formatter_cls()
