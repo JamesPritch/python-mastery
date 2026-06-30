@@ -1,4 +1,4 @@
-from structure import Structure
+from structly.structure import Structure
 
 class Ticker(Structure):
     name = String()
@@ -12,7 +12,7 @@ class Ticker(Structure):
     volume = Integer()
 
 from cofollow import consumer, follow, receive
-from tableformat import create_formatter
+from structly.tableformat import create_formatter
 import csv
 
 @consumer

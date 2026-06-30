@@ -1,4 +1,4 @@
-from structure import Structure
+from structly.structure import Structure
 
 class Ticker(Structure):
     name = String()
@@ -25,7 +25,7 @@ class Ticker(Structure):
 if __name__ == '__main__':
     from follow import follow
     import csv
-    from tableformat import create_formatter, print_table
+    from structly.tableformat import create_formatter, print_table
 
     formatter = create_formatter('text')
 

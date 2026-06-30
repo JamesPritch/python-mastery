@@ -1,5 +1,5 @@
 import sys
-from validate0 import Validator, validated
+from structly.validate0 import Validator, validated
 from collections import ChainMap
 
 class StructureMeta(type):

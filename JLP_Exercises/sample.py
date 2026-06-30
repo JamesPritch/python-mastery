@@ -1,4 +1,4 @@
-from validate0 import Integer, validated
+from structly.validate0 import Integer, validated
 from logcall import logformat, logged
 
 @logged
